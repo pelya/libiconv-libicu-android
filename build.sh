@@ -11,7 +11,7 @@ NDK=`which ndk-build`
 NDK=`dirname $NDK`
 NDK=`readlink -f $NDK`
 
-for ARCH in armeabi armeabi-v7a; do
+for ARCH in armeabi armeabi-v7a x86 mips; do
 
 cd $BUILDDIR
 mkdir -p $ARCH
@@ -25,7 +25,7 @@ cd android_support
 ln -sf $NDK/sources/android/support jni
 
 ndk-build -j$NCPU APP_ABI=$ARCH || exit 1
-ln -sf android_support/obj/local/$ARCH/libandroid_support.a ../
+cp -f obj/local/$ARCH/libandroid_support.a ../
 
 } || exit 1
 
@@ -35,81 +35,91 @@ cd $BUILDDIR/$ARCH
 
 [ -e libiconv.so ] || {
 
-[ -d libiconv-1.14 ] || curl http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz | tar xvz || exit 1
+	[ -d libiconv-1.14 ] || curl http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz | tar xvz || exit 1
 
-cd libiconv-1.14
+	cd libiconv-1.14
 
-cp -f $BUILDDIR/config.sub build-aux/
-cp -f $BUILDDIR/config.guess build-aux/
-cp -f $BUILDDIR/config.sub libcharset/build-aux/
-cp -f $BUILDDIR/config.guess libcharset/build-aux/
+	cp -f $BUILDDIR/config.sub build-aux/
+	cp -f $BUILDDIR/config.guess build-aux/
+	cp -f $BUILDDIR/config.sub libcharset/build-aux/
+	cp -f $BUILDDIR/config.guess libcharset/build-aux/
 
-env CFLAGS="-I$NDK/sources/android/support/include" \
-LDFLAGS="-L$BUILDDIR/$ARCH -landroid_support" \
-$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-./configure \
---host=arm-linux-androideabi \
---prefix=`pwd`/.. \
---enable-static --enable-shared \
-|| exit 1
+	env CFLAGS="-I$NDK/sources/android/support/include" \
+		LDFLAGS="-L$BUILDDIR/$ARCH -landroid_support" \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		./configure \
+		--host=arm-linux-androideabi \
+		--prefix=`pwd`/.. \
+		--enable-static --enable-shared \
+		|| exit 1
 
-env PATH=`pwd`:$PATH \
-$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-make -j$NCPU V=1 || exit 1
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make -j$NCPU V=1 || exit 1
 
-env PATH=`pwd`:$PATH \
-$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-make V=1 install || exit 1
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make V=1 install || exit 1
 
-ln -sf lib/libiconv.so ../
-ln -sf lib/libcharset.so ../
+	cd ..
+
+	for f in libiconv libcharset; do
+		cp -f lib/$f.so ./
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+			sh -c '$STRIP'" $f.so"
+	done
 
 } || exit 1
 
 cd $BUILDDIR/$ARCH
 
-# =========== libicu.so ===========
+# =========== libicuXX.so ===========
 
-[ -e libicudata.so ] || {
+[ -e libicuuc.so ] || {
 
-[ -d icu ] || curl http://download.icu-project.org/files/icu4c/52.1/icu4c-52_1-src.tgz | tar xvz || exit 1
+	[ -d icu ] || curl http://download.icu-project.org/files/icu4c/52.1/icu4c-52_1-src.tgz | tar xvz || exit 1
 
-cd icu/source
+	cd icu/source
 
-cp -f $BUILDDIR/config.sub .
-cp -f $BUILDDIR/config.guess .
+	cp -f $BUILDDIR/config.sub .
+	cp -f $BUILDDIR/config.guess .
 
-[ -d cross ] || {
-mkdir cross
-cd cross
-../configure || exit 1
-make -j$NCPU VERBOSE=1 || exit 1
-cd ..
-} || exit 1
+	[ -d cross ] || {
+		mkdir cross
+		cd cross
+		../configure || exit 1
+		make -j$NCPU VERBOSE=1 || exit 1
+		cd ..
+	} || exit 1
 
-env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
-LDFLAGS="-frtti -fexceptions" \
-LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
-$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-./configure \
---host=arm-linux-androideabi \
---prefix=`pwd`/../.. \
---with-cross-build=`pwd`/cross \
---enable-static --enable-shared \
-|| exit 1
+	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
+		LDFLAGS="-frtti -fexceptions" \
+		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		./configure \
+		--host=arm-linux-androideabi \
+		--prefix=`pwd`/../../ \
+		--with-cross-build=`pwd`/cross \
+		--enable-static --enable-shared \
+		--with-data-packaging=archive \
+		|| exit 1
 
-env PATH=`pwd`:$PATH \
-$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-make -j$NCPU VERBOSE=1 || exit 1
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make -j$NCPU VERBOSE=1 || exit 1
 
-env PATH=`pwd`:$PATH \
-$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-make V=1 install || exit 1
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make V=1 install || exit 1
 
-for f in libicudata libicui18n libicuio libicule libiculx libicutest libicutu libicuuc; do
-ln -sf lib/$f.so ../../
-ln -sf lib/$f.a ../../
-done
+	#cp -f -a share ../../
+
+	for f in libicudata libicui18n libicuio libicule libiculx libicutu libicuuc; do
+		cp -f lib/$f.so ../../
+		cp -f lib/$f.a ../../
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+			sh -c '$STRIP'" ../../$f.so"
+	done
 
 } || exit 1
 
