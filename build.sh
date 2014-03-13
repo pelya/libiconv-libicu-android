@@ -92,6 +92,9 @@ cd $BUILDDIR/$ARCH
 		cd ..
 	} || exit 1
 
+	sed -i "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
+	sed -i "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
+
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions" \
 		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
@@ -104,19 +107,21 @@ cd $BUILDDIR/$ARCH
 		--with-data-packaging=archive \
 		|| exit 1
 
+	sed -i "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
+
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make -j$NCPU VERBOSE=1 || exit 1
+
+	sed -i "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
 
-	#cp -f -a share ../../
-
-	for f in libicudata libicui18n libicuio libicule libiculx libicutu libicuuc; do
-		cp -f lib/$f.so ../../
-		cp -f lib/$f.a ../../
+	for f in libicudata libicutest libicui18n libicuio libicule libiculx libicutu libicuuc; do
+		cp -f -H ../../lib/$f.so ../../
+		cp -f ../../lib/$f.a ../../
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 			sh -c '$STRIP'" ../../$f.so"
 	done
