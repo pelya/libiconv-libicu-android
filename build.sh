@@ -77,7 +77,8 @@ cd $BUILDDIR/$ARCH
 
 [ -e libicuuc.so ] || {
 
-	[ -d icu ] || curl http://download.icu-project.org/files/icu4c/52.1/icu4c-52_1-src.tgz | tar xvz || exit 1
+	#[ -d icu ] || curl http://download.icu-project.org/files/icu4c/52.1/icu4c-52_1-src.tgz | tar xvz || exit 1
+        [ -d icu ] || curl http://pkgs.fedoraproject.org/repo/pkgs/icu/icu4c-52_1-src.tgz/9e96ed4c1d99c0d14ac03c140f9f346c/icu4c-52_1-src.tgz | tar xvz || exit 1
 
 	cd icu/source
 
