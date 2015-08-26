@@ -35,7 +35,7 @@ cd $BUILDDIR/$ARCH
 
 [ -e libiconv.so ] || {
 
-	[ -d libiconv-1.14 ] || curl http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz | tar xvz || exit 1
+	[ -d libiconv-1.14 ] || curl -L http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz | tar xvz || exit 1
 
 	cd libiconv-1.14
 
