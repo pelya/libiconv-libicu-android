@@ -35,7 +35,9 @@ cd $BUILDDIR/$ARCH
 
 [ -e libiconv.so ] || {
 
-	[ -d libiconv-1.14 ] || curl -L http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz | tar xvz || exit 1
+	[ -e ../libiconv-1.14.tar.gz ] || curl -L http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz -o ../libiconv-1.14.tar.gz || exit 1
+
+	tar xvf ../libiconv-1.14.tar.gz
 
 	cd libiconv-1.14
 
@@ -77,8 +79,9 @@ cd $BUILDDIR/$ARCH
 
 [ -e libicuuc.so ] || {
 
-	#[ -d icu ] || curl http://download.icu-project.org/files/icu4c/52.1/icu4c-52_1-src.tgz | tar xvz || exit 1
-        [ -d icu ] || curl http://pkgs.fedoraproject.org/repo/pkgs/icu/icu4c-52_1-src.tgz/9e96ed4c1d99c0d14ac03c140f9f346c/icu4c-52_1-src.tgz | tar xvz || exit 1
+	[ -e ../icu4c-52_1-src.tgz ] || curl http://pkgs.fedoraproject.org/repo/pkgs/icu/icu4c-52_1-src.tgz/9e96ed4c1d99c0d14ac03c140f9f346c/icu4c-52_1-src.tgz -o ../icu4c-52_1-src.tgz || exit 1
+
+	tar xvf ../icu4c-52_1-src.tgz
 
 	cd icu/source
 
