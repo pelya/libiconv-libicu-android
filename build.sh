@@ -11,9 +11,15 @@ NDK=`which ndk-build`
 NDK=`dirname $NDK`
 NDK=`readlink -f $NDK`
 
-for ARCH in armeabi armeabi-v7a x86 mips; do
+export CLANG=1
+
+for ARCH in armeabi-v7a arm64-v8a x86 x86_64; do
 
 cd $BUILDDIR
+
+GCCPREFIX="`env CLANG= ./setCrossEnvironment-$ARCH.sh sh -c 'basename $CC | sed s/-gcc//'`"
+echo "ARCH $ARCH GCCPREFIX $GCCPREFIX"
+
 mkdir -p $ARCH
 cd $BUILDDIR/$ARCH
 
@@ -24,8 +30,9 @@ mkdir -p android_support
 cd android_support
 ln -sf $NDK/sources/android/support jni
 
-ndk-build -j$NCPU APP_ABI=$ARCH || exit 1
-cp -f obj/local/$ARCH/libandroid_support.a ../
+#ndk-build -j$NCPU APP_ABI=$ARCH APP_MODULES=android_support LIBCXX_FORCE_REBUILD=true CLANG=1 || exit 1
+#cp -f obj/local/$ARCH/libandroid_support.a ../
+ln -sf $NDK/sources/cxx-stl/llvm-libc++/libs/$ARCH/libandroid_support.a ../
 
 } || exit 1
 
@@ -35,11 +42,11 @@ cd $BUILDDIR/$ARCH
 
 [ -e libiconv.so ] || {
 
-	[ -e ../libiconv-1.14.tar.gz ] || curl -L http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz -o ../libiconv-1.14.tar.gz || exit 1
+	rm -rf libiconv-1.15
 
-	tar xvf ../libiconv-1.14.tar.gz
+	tar xvf ../libiconv-1.15.tar.gz
 
-	cd libiconv-1.14
+	cd libiconv-1.15
 
 	cp -f $BUILDDIR/config.sub build-aux/
 	cp -f $BUILDDIR/config.guess build-aux/
@@ -50,14 +57,36 @@ cd $BUILDDIR/$ARCH
 		LDFLAGS="-L$BUILDDIR/$ARCH -landroid_support" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
-		--host=arm-linux-androideabi \
+		--host=$GCCPREFIX \
 		--prefix=`pwd`/.. \
 		--enable-static --enable-shared \
 		|| exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-		make -j$NCPU V=1 || exit 1
+		make V=1 || echo "Libtool is a miserable pile of shit, linking libcharset.so manually"
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		sh -c '$LD $CFLAGS $LDFLAGS -shared libcharset/lib/.libs/*.o -o libcharset/lib/.libs/libcharset.so' || exit 1
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make V=1 || echo "Libtool works worse than cat /dev/urandom | head 10000 > library.so, because this will at least generate a target file, linking libiconv.so manually"
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		sh -c '$LD $CFLAGS $LDFLAGS -shared lib/.libs/*.o -o lib/.libs/libiconv.so' || exit 1
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make V=1 || echo "Did you know that libtool contributes to global warming by overheating your CPU?"
+
+	cp -f lib/.libs/libiconv.so preload/preloadable_libiconv.so
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make V=1 || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
@@ -79,9 +108,9 @@ cd $BUILDDIR/$ARCH
 
 [ -e libicuuc.so ] || {
 
-	[ -e ../icu4c-52_1-src.tgz ] || curl http://pkgs.fedoraproject.org/repo/pkgs/icu/icu4c-52_1-src.tgz/9e96ed4c1d99c0d14ac03c140f9f346c/icu4c-52_1-src.tgz -o ../icu4c-52_1-src.tgz || exit 1
+	rm -rf icu
 
-	tar xvf ../icu4c-52_1-src.tgz
+	tar xvf ../icu4c-59_1-src.tgz
 
 	cd icu/source
 
@@ -99,12 +128,12 @@ cd $BUILDDIR/$ARCH
 	sed -i "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
 	sed -i "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
 
-	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
+	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -include $BUILDDIR/ndk-r15-64-bit-fix.h" \
 		LDFLAGS="-frtti -fexceptions" \
 		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
-		--host=arm-linux-androideabi \
+		--host=$GCCPREFIX \
 		--prefix=`pwd`/../../ \
 		--with-cross-build=`pwd`/cross \
 		--enable-static --enable-shared \
@@ -132,6 +161,6 @@ cd $BUILDDIR/$ARCH
 
 } || exit 1
 
-done # for ARCH in armeabi armeabi-v7a
+done # for ARCH in ...
 
 exit 0
