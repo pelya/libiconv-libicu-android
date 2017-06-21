@@ -102,11 +102,48 @@ cd $BUILDDIR/$ARCH
 
 } || exit 1
 
+# =========== libharfbuzz ===========
+
 cd $BUILDDIR/$ARCH
 
-# =========== libicuXX.so ===========
+[ -e libharfbuzz.a ] || {
+	rm -rf harfbuzz-1.4.6
+	tar xvf ../harfbuzz-1.4.6.tar.bz2
+	cd harfbuzz-1.4.6
 
-[ -e libicuuc.so ] || {
+	cp -f $BUILDDIR/config.sub .
+	cp -f $BUILDDIR/config.guess .
+
+	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -I$BUILDDIR/$ARCH/include" \
+		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
+		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		./configure \
+		--host=$GCCPREFIX \
+		--prefix=`pwd`/../ \
+		--enable-static --disable-shared \
+		--with-glib=no --with-gobject=no \
+		--with-cairo=no --with-fontconfig=no \
+		--with-icu=no --with-freetype=no \
+		|| exit 1
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make -j$NCPU V=1 || exit 1
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make V=1 install || exit 1
+
+	cd ..
+	cp -f lib/libharfbuzz.a ./
+}
+
+# =========== libicuuc ===========
+
+cd $BUILDDIR/$ARCH
+
+[ -e libicuuc.a ] || {
 
 	rm -rf icu
 
@@ -129,15 +166,102 @@ cd $BUILDDIR/$ARCH
 	sed -i "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -include $BUILDDIR/ndk-r15-64-bit-fix.h" \
-		LDFLAGS="-frtti -fexceptions" \
+		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
 		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
 		--prefix=`pwd`/../../ \
 		--with-cross-build=`pwd`/cross \
-		--enable-static --enable-shared \
+		--enable-static --disable-shared \
 		--with-data-packaging=archive \
+		|| exit 1
+
+#		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include" \
+#		ICULEHB_LIBS="-licu-le-hb" \
+#		--enable-layoutex \
+
+	sed -i "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make -j$NCPU VERBOSE=1 || exit 1
+
+	sed -i "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make V=1 install || exit 1
+
+	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc; do
+		#cp -f -H ../../lib/$f.so ../../
+		cp -f ../../lib/$f.a ../../
+		#$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		#	sh -c '$STRIP'" ../../$f.so"
+	done
+
+} || exit 1
+
+# =========== libicu-le-hb ===========
+
+cd $BUILDDIR/$ARCH
+
+[ -e libicu-le-hb.a ] || {
+	rm -rf icu-le-hb-1.0.3
+	tar xvf ../icu-le-hb-1.0.3.tar.gz
+	cd icu-le-hb-1.0.3
+
+	cp -f $BUILDDIR/config.sub .
+	cp -f $BUILDDIR/config.guess .
+
+	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
+		CXXFLAGS="-std=c++11" \
+		LDFLAGS="-frtti -fexceptions" \
+		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
+		HARFBUZZ_CFLAGS="-I$BUILDDIR/$ARCH/include/harfbuzz" \
+		HARFBUZZ_LIBS="-L$BUILDDIR/$ARCH/lib -lharfbuzz" \
+		ICU_CFLAGS="-I$BUILDDIR/$ARCH/include" \
+		ICU_LIBS="-L$BUILDDIR/$ARCH/lib" \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		./configure \
+		--host=$GCCPREFIX \
+		--prefix=`pwd`/../ \
+		--enable-static --disable-shared \
+		|| exit 1
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make V=1 || exit 1
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		make V=1 install || exit 1
+
+	cd ..
+	cp -f lib/libicu-le-hb.a ./
+}
+
+# =========== We are building libicu twice, because libiculx depends on libicu-le-hb wcich depends on libicudata ===========
+
+cd $BUILDDIR/$ARCH
+
+[ -e libiculx.a ] || {
+
+	cd icu/source
+
+	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -include $BUILDDIR/ndk-r15-64-bit-fix.h" \
+		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
+		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
+		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include/icu-le-hb" \
+		ICULEHB_LIBS="-licu-le-hb" \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		./configure \
+		--host=$GCCPREFIX \
+		--prefix=`pwd`/../../ \
+		--with-cross-build=`pwd`/cross \
+		--enable-static --disable-shared \
+		--with-data-packaging=archive \
+		--enable-layoutex \
 		|| exit 1
 
 	sed -i "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
@@ -152,14 +276,15 @@ cd $BUILDDIR/$ARCH
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
 
-	for f in libicudata libicutest libicui18n libicuio libicule libiculx libicutu libicuuc; do
-		cp -f -H ../../lib/$f.so ../../
-		cp -f ../../lib/$f.a ../../
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-			sh -c '$STRIP'" ../../$f.so"
+	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc libiculx; do
+		#cp -f -H ../../lib/$f.so ../../
+		cp -f ../../lib/$f.a ../../ || exit 1
+		#$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		#	sh -c '$STRIP'" ../../$f.so"
 	done
 
 } || exit 1
+
 
 done # for ARCH in ...
 
