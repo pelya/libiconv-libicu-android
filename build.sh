@@ -13,7 +13,7 @@ NDK=`readlink -f $NDK`
 
 export CLANG=1
 
-for ARCH in armeabi-v7a arm64-v8a x86 x86_64; do
+for ARCH in armeabi armeabi-v7a arm64-v8a x86 x86_64; do
 
 cd $BUILDDIR
 
