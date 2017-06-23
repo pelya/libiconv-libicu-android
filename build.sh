@@ -116,7 +116,7 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -I$BUILDDIR/$ARCH/include" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
+		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++ -latomic" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
@@ -167,7 +167,7 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -include $BUILDDIR/ndk-r15-64-bit-fix.h" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
+		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++ -latomic" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
@@ -217,7 +217,7 @@ cd $BUILDDIR/$ARCH
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		CXXFLAGS="-std=c++11" \
 		LDFLAGS="-frtti -fexceptions" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
+		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++ -latomic" \
 		HARFBUZZ_CFLAGS="-I$BUILDDIR/$ARCH/include/harfbuzz" \
 		HARFBUZZ_LIBS="-L$BUILDDIR/$ARCH/lib -lharfbuzz" \
 		ICU_CFLAGS="-I$BUILDDIR/$ARCH/include" \
@@ -251,7 +251,7 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -include $BUILDDIR/ndk-r15-64-bit-fix.h" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++" \
+		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lgnustl_static -lstdc++ -latomic" \
 		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include/icu-le-hb" \
 		ICULEHB_LIBS="-licu-le-hb" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
