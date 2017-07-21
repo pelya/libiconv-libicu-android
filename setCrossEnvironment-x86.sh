@@ -21,7 +21,7 @@ NDK=`readlink -f $NDK`
 #echo NDK $NDK
 GCCPREFIX=i686-linux-android
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
-[ -z "$PLATFORMVER" ] && PLATFORMVER=android-14
+[ -z "$PLATFORMVER" ] && PLATFORMVER=android-15
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then
 	LOCAL_PATH=`realpath $LOCAL_PATH`
