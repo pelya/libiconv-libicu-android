@@ -31,72 +31,63 @@ fi
 ARCH=armeabi-v7a
 
 
-APP_MODULES=
-APP_SHARED_LIBS=
-MISSING_INCLUDE=
-MISSING_LIB=
-
-CFLAGS="\
--fpic -ffunction-sections -funwind-tables -fstack-protector-strong \
--no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp \
--mfpu=vfpv3-d16 -mthumb -O2 -g -DNDEBUG \
--fomit-frame-pointer -fno-strict-aliasing -finline-limit=300 \
--DANDROID -Wall -Wno-unused -Wa,--noexecstack -Wformat -Werror=format-security \
--isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include \
--isystem$NDK/sources/cxx-stl/gnu-libstdc++/$NDK_TOOLCHAIN_VERSION/include \
--isystem$NDK/sources/cxx-stl/gnu-libstdc++/$NDK_TOOLCHAIN_VERSION/libs/$ARCH/include \
--isystem$NDK/sources/cxx-stl/gnu-libstdc++/$NDK_TOOLCHAIN_VERSION/include/backward \
--isystem$LOCAL_PATH/../sdl-1.2/include \
-`echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-isystem$LOCAL_PATH/../\1/include@g\"` \
-$MISSING_INCLUDE $CFLAGS"
-
-UNRESOLVED="-Wl,--no-undefined"
-if [ -n "$BUILD_EXECUTABLE" ]; then
-	SHARED="-Wl,--gc-sections -Wl,-z,nocopyreloc -pie"
-fi
-if [ -n "$NO_SHARED_LIBS" ]; then
-	APP_SHARED_LIBS=
-fi
-if [ -n "$ALLOW_UNRESOLVED_SYMBOLS" ]; then
-	UNRESOLVED=
-fi
-
-LDFLAGS="\
-$SHARED \
---sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
--L$LOCAL_PATH/../../obj/local/$ARCH \
-`echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/$ARCH/lib\1.so@g\"` \
--L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
--lc -lm -ldl -llog -lz \
--L$NDK/sources/cxx-stl/gnu-libstdc++/$NDK_TOOLCHAIN_VERSION/libs/$ARCH \
--lgnustl_static \
--no-canonical-prefixes -march=armv7-a -Wl,--fix-cortex-a8 $UNRESOLVED -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
--Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings \
--lsupc++ \
-$MISSING_LIB $LDFLAGS"
-
-CC="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-gcc"
-CXX="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-g++"
-CPP="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-cpp $CFLAGS"
-
-if [ -n "$CLANG" ]; then
-
-CFLAGS="\
--gcc-toolchain $NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH \
--fno-integrated-as -target armv7-none-linux-androideabi -Wno-invalid-command-line-argument -Wno-unused-command-line-argument \
+CFLAGS="
+-fexceptions
+-frtti
+-ffunction-sections
+-funwind-tables
+-fstack-protector-strong
+-Wno-invalid-command-line-argument
+-Wno-unused-command-line-argument
+-no-canonical-prefixes
+-I$NDK/sources/cxx-stl/llvm-libc++/include
+-I$NDK/sources/cxx-stl/llvm-libc++abi/include
+-I$NDK/sources/android/support/include
+-DANDROID
+-Wa,--noexecstack
+-Wformat
+-Werror=format-security
+-DNDEBUG
+-O2
+-g
+-gcc-toolchain
+$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64
+-target
+armv7-none-linux-androideabi15
+-march=armv7-a
+-mfloat-abi=softfp
+-mfpu=vfpv3-d16
+-mthumb
+-fpic
+-fno-integrated-as
+--sysroot $NDK/platforms/android-14/arch-arm
+-isystem $NDK/sysroot/usr/include
+-isystem $NDK/sysroot/usr/include/arm-linux-androideabi
+-D__ANDROID_API__=15
 $CFLAGS"
 
-LDFLAGS="$LDFLAGS \
--lgcc \
--latomic \
--gcc-toolchain $NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH \
--target armv7-none-linux-androideabi"
+CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
+
+LDFLAGS="
+-shared
+--sysroot $NDK/platforms/android-14/arch-arm
+$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libc++_static.a
+$NDK/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/armeabi-v7a/libc++abi.a
+$NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/armeabi-v7a/libandroid_support.a
+$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libunwind.a
+-latomic -Wl,--exclude-libs,libatomic.a
+-gcc-toolchain
+$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64
+-no-canonical-prefixes -target armv7-none-linux-androideabi14
+-Wl,--fix-cortex-a8 -Wl,--exclude-libs,libunwind.a -Wl,--build-id -Wl,--no-undefined -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--warn-shared-textrel -Wl,--fatal-warnings
+-lc -lm -lstdc++
+$LDFLAGS"
+
+LDFLAGS="`echo $LDFLAGS | tr '\n' ' '`"
 
 CC="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/clang"
 CXX="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/clang++"
 CPP="$CC -E $CFLAGS"
-
-fi
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
