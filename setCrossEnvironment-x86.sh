@@ -62,6 +62,8 @@ i686-none-linux-android
 -D__ANDROID_API__=15
 $CFLAGS"
 
+CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
+
 LDFLAGS="
 -shared
 --sysroot $NDK/platforms/android-14/arch-x86

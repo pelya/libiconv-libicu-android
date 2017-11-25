@@ -61,6 +61,8 @@ x86_64-none-linux-android
 -D__ANDROID_API__=21
 $CFLAGS"
 
+CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
+
 LDFLAGS="
 -shared
 --sysroot $NDK/platforms/android-21/arch-x86_64
