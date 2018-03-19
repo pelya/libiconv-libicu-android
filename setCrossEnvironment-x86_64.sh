@@ -3,20 +3,17 @@
 IFS='
 '
 
-MYARCH=linux-x86_64
-if uname -s | grep -i "linux" > /dev/null ; then
-	MYARCH=linux-x86_64
-fi
-if uname -s | grep -i "darwin" > /dev/null ; then
-	MYARCH=darwin-x86_64
-fi
-if uname -s | grep -i "windows" > /dev/null ; then
-	MYARCH=windows-x86_64
-fi
-
 NDK=`which ndk-build`
 NDK=`dirname $NDK`
-NDK=`readlink -f $NDK`
+
+if uname -s | grep -i "linux" > /dev/null ; then
+	MYARCH=linux-$(arch)
+  NDK=`readlink -f $NDK`
+elif uname -s | grep -i "darwin" > /dev/null ; then
+	MYARCH=darwin-x86_64
+elif uname -s | grep -i "windows" > /dev/null ; then
+	MYARCH=windows-x86_64
+fi
 
 #echo NDK $NDK
 GCCPREFIX=x86_64-linux-android
