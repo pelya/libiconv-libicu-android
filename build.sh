@@ -4,12 +4,21 @@ set -x
 
 export BUILDDIR=`pwd`
 
-NCPU=8
-uname -s | grep -i "linux" && NCPU=`cat /proc/cpuinfo | grep -c -i processor`
+if uname -s | grep -i 'linux' &> /dev/null; then
+  IS_LINUX=1
+fi
+
+if [ $IS_LINUX ]; then
+  NCPU=`cat /proc/cpuinfo | grep -c -i processor`
+else
+  NCPU=8
+fi
 
 NDK=`which ndk-build`
 NDK=`dirname $NDK`
-NDK=`readlink -f $NDK`
+if [ $IS_LINUX ]; then
+  NDK=`readlink -f $NDK`
+fi
 
 export CLANG=1
 
@@ -26,13 +35,13 @@ cd $BUILDDIR/$ARCH
 # =========== libandroid_support.a ===========
 
 [ -e libandroid_support.a ] || {
-mkdir -p android_support
-cd android_support
-ln -sf $NDK/sources/android/support jni
+	mkdir -p android_support
+	cd android_support
+	ln -sf $NDK/sources/android/support jni
 
-#ndk-build -j$NCPU APP_ABI=$ARCH APP_MODULES=android_support LIBCXX_FORCE_REBUILD=true CLANG=1 || exit 1
-#cp -f obj/local/$ARCH/libandroid_support.a ../
-ln -sf $NDK/sources/cxx-stl/llvm-libc++/libs/$ARCH/libandroid_support.a ../
+	#ndk-build -j$NCPU APP_ABI=$ARCH APP_MODULES=android_support LIBCXX_FORCE_REBUILD=true CLANG=1 || exit 1
+	#cp -f obj/local/$ARCH/libandroid_support.a ../
+	ln -sf $NDK/sources/cxx-stl/llvm-libc++/libs/$ARCH/libandroid_support.a ../
 
 } || exit 1
 
@@ -53,7 +62,7 @@ cd $BUILDDIR/$ARCH
 	cp -f $BUILDDIR/config.sub libcharset/build-aux/
 	cp -f $BUILDDIR/config.guess libcharset/build-aux/
 
-	sed -i 's/MB_CUR_MAX/1/g' lib/loop_wchar.h
+	sed -i,tmp 's/MB_CUR_MAX/1/g' lib/loop_wchar.h
 
 	env CFLAGS="-I$NDK/sources/android/support/include -D_IO_getc=getc" \
 		LDFLAGS="-L$BUILDDIR/$ARCH -landroid_support" \
@@ -116,7 +125,7 @@ cd $BUILDDIR/$ARCH
 	cp -f $BUILDDIR/config.sub .
 	cp -f $BUILDDIR/config.guess .
 
-	sed -i 's/ld_shlibs=no/ld_shlibs=yes/g' ./configure
+	sed -i,tmp 's/ld_shlibs=no/ld_shlibs=yes/g' ./configure
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -I$BUILDDIR/$ARCH/include" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
@@ -178,8 +187,8 @@ cd $BUILDDIR/$ARCH
 		cd ..
 	} || exit 1
 
-	sed -i "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
-	sed -i "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
+	sed -i,tmp "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
+	sed -i,tmp "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
@@ -198,13 +207,13 @@ cd $BUILDDIR/$ARCH
 #		ICULEHB_LIBS="-licu-le-hb" \
 #		--enable-layoutex \
 
-	sed -i "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
+	sed -i,tmp "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make -j$NCPU VERBOSE=1 || exit 1
 
-	sed -i "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
+	sed -i,tmp "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
@@ -231,7 +240,7 @@ cd $BUILDDIR/$ARCH
 	cp -f $BUILDDIR/config.sub .
 	cp -f $BUILDDIR/config.guess .
 
-	sed -i 's/ld_shlibs=no/ld_shlibs=yes/g' ./configure
+	sed -i,tmp 's/ld_shlibs=no/ld_shlibs=yes/g' ./configure
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		CXXFLAGS="-std=c++11" \
@@ -251,7 +260,7 @@ cd $BUILDDIR/$ARCH
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make V=1 || \
-	env PATH=`pwd`:$PATH \
+		env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		sh -c '$LD $CFLAGS -shared src/.libs/*.o -o src/.libs/libicu-le-hb.so.0.0.0 -L../lib -lharfbuzz -licuuc $LDFLAGS' || exit 1
 
@@ -340,13 +349,13 @@ cd $BUILDDIR/$ARCH
 		--enable-layoutex \
 		|| exit 1
 
-	sed -i "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
+	sed -i,tmp "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make -j$NCPU VERBOSE=1 || exit 1
 
-	sed -i "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
+	sed -i,tmp "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
