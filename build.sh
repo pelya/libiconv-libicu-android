@@ -172,7 +172,7 @@ cd $BUILDDIR/$ARCH
 
 cd $BUILDDIR/$ARCH
 
-[ -e libicuuc.a ] || [ $SKIP_ICUUC ] || {
+[ -e libicuuc.a ] || [ -e libicuuc.so ] || [ $SKIP_ICUUC ] {
 
 	rm -rf icu
 
@@ -194,6 +194,12 @@ cd $BUILDDIR/$ARCH
 	sed -i,tmp "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
 	sed -i,tmp "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
 
+	if [ $SHARED_ICU ]; then
+		libtype='--enable-shared --disable-static'
+	else
+		libtype='--enable-static --disable-shared'
+	fi
+
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
 		LIBS="-L$BUILDDIR/$ARCH -landroid_support `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
@@ -203,7 +209,7 @@ cd $BUILDDIR/$ARCH
 		--host=$GCCPREFIX \
 		--prefix=`pwd`/../../ \
 		--with-cross-build=`pwd`/cross \
-		--enable-static --disable-shared \
+		$libtype \
 		--with-data-packaging=archive \
 		|| exit 1
 
@@ -224,8 +230,11 @@ cd $BUILDDIR/$ARCH
 		make V=1 install || exit 1
 
 	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc; do
-		#cp -f -H ../../lib/$f.so ../../
-		cp -f ../../lib/$f.a ../../
+		if [ $SHARED_ICU ]; then
+			cp -f -H ../../lib/$f.so ../../
+		else
+			cp -f ../../lib/$f.a ../../
+		fi
 		#$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		#	sh -c '$STRIP'" ../../$f.so"
 	done
