@@ -53,7 +53,7 @@ cd $BUILDDIR/$ARCH
 
 # =========== libiconv.so ===========
 
-[ -e libiconv.so ] || {
+[ -e libiconv.so ] || [ $SKIP_ICONV ] || {
 
 	rm -rf libiconv-1.15
 
@@ -121,7 +121,7 @@ cd $BUILDDIR/$ARCH
 
 cd $BUILDDIR/$ARCH
 
-[ -e libharfbuzz.a ] || {
+[ -e libharfbuzz.a ] || [ $SKIP_HARFBUZZ ] || {
 	rm -rf harfbuzz-1.4.6
 	tar xvf ../harfbuzz-1.4.6.tar.bz2
 	cd harfbuzz-1.4.6
@@ -172,7 +172,7 @@ cd $BUILDDIR/$ARCH
 
 cd $BUILDDIR/$ARCH
 
-[ -e libicuuc.a ] || [ -e libicuuc.so ] {
+[ -e libicuuc.a ] || [ -e libicuuc.so ] || [ $SKIP_ICUUC ] {
 
 	rm -rf icu
 
@@ -245,7 +245,7 @@ cd $BUILDDIR/$ARCH
 
 cd $BUILDDIR/$ARCH
 
-[ -e libicu-le-hb.a ] || {
+[ -e libicu-le-hb.a ] || [ $SKIP_ICUUC ] || [ $SKIP_HARFBUZZ ] || [ $SKIP_ICULEHB ] || {
 	rm -rf icu-le-hb-1.0.3
 	tar xvf ../icu-le-hb-1.0.3.tar.gz
 	cd icu-le-hb-1.0.3
@@ -343,7 +343,7 @@ EOF
 
 cd $BUILDDIR/$ARCH
 
-[ -e libiculx.a ] || {
+[ -e libiculx.a ] || [ $SKIP_HARFBUZZ ] || [ $SKIP_ICUUC ] || [ $SKIP_ICULEHB ] || [ $SKIP_ICULX ] || {
 
 	cd icu/source
 
