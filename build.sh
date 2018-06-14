@@ -22,7 +22,7 @@ fi
 
 export CLANG=1
 
-if [ ! $ARCHS ]; then
+if [ -n "$ARCHS" ]; then
   ARCHS='arm64-v8a armeabi-v7a x86 x86_64'
 fi
 
