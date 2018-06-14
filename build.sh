@@ -179,7 +179,7 @@ cd $BUILDDIR/$ARCH
 
 cd $BUILDDIR/$ARCH
 
-[ -e libicuuc.a ] || [ -e libicuuc.so ] || [ $SKIP_ICUUC ] {
+[ -e libicuuc.a ] || [ -e libicuuc.so ] || [ $SKIP_ICUUC ] || {
 
 	rm -rf icu
 
