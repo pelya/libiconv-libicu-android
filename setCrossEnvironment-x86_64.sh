@@ -65,7 +65,6 @@ LDFLAGS="
 --sysroot $NDK/platforms/android-21/arch-x86_64
 $NDK/sources/cxx-stl/llvm-libc++/libs/x86_64/libc++_static.a
 $NDK/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/x86_64/libc++abi.a
-$NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/x86_64/libandroid_support.a
 -latomic -Wl,--exclude-libs,libatomic.a
 -gcc-toolchain
 $NDK/toolchains/x86_64-4.9/prebuilt/linux-x86_64

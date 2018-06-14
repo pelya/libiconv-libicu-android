@@ -23,7 +23,7 @@ fi
 export CLANG=1
 
 if [ ! $ARCHS ]; then
-  ARCHS='armeabi armeabi-v7a arm64-v8a x86 x86_64'
+  ARCHS='arm64-v8a armeabi-v7a x86 x86_64'
 fi
 
 for ARCH in $ARCHS; do
@@ -37,6 +37,11 @@ mkdir -p $ARCH
 cd $BUILDDIR/$ARCH
 
 # =========== libandroid_support.a ===========
+ANDROID_SUPPORT=
+
+if [ $ARCH = armeabi-v7a ] || [ $ARCH = x86 ]; then
+
+ANDROID_SUPPORT=-landroid_support
 
 [ -e libandroid_support.a ] || {
 	mkdir -p android_support
@@ -48,6 +53,8 @@ cd $BUILDDIR/$ARCH
 	ln -sf $NDK/sources/cxx-stl/llvm-libc++/libs/$ARCH/libandroid_support.a ../
 
 } || exit 1
+
+fi
 
 cd $BUILDDIR/$ARCH
 
@@ -69,7 +76,7 @@ cd $BUILDDIR/$ARCH
 	sed -i,tmp 's/MB_CUR_MAX/1/g' lib/loop_wchar.h
 
 	env CFLAGS="-I$NDK/sources/android/support/include -D_IO_getc=getc" \
-		LDFLAGS="-L$BUILDDIR/$ARCH -landroid_support" \
+		LDFLAGS="-L$BUILDDIR/$ARCH $ANDROID_SUPPORT" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
@@ -133,7 +140,7 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -I$BUILDDIR/$ARCH/include" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support" \
+		LIBS="-L$BUILDDIR/$ARCH $ANDROID_SUPPORT" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
@@ -202,7 +209,7 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
+		LIBS="-L$BUILDDIR/$ARCH $ANDROID_SUPPORT `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
 		env ac_cv_func_strtod_l=no \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
@@ -258,7 +265,7 @@ cd $BUILDDIR/$ARCH
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		CXXFLAGS="-std=c++11" \
 		LDFLAGS="-frtti -fexceptions" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support" \
+		LIBS="-L$BUILDDIR/$ARCH $ANDROID_SUPPORT" \
 		HARFBUZZ_CFLAGS="-I$BUILDDIR/$ARCH/include/harfbuzz" \
 		HARFBUZZ_LIBS="-L$BUILDDIR/$ARCH/lib -lharfbuzz" \
 		ICU_CFLAGS="-I$BUILDDIR/$ARCH/include" \
@@ -349,7 +356,7 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
+		LIBS="-L$BUILDDIR/$ARCH $ANDROID_SUPPORT `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
 		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include/icu-le-hb" \
 		ICULEHB_LIBS="-licu-le-hb" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
