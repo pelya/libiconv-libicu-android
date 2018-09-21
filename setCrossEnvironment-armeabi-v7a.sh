@@ -18,7 +18,6 @@ fi
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
-[ -z "$PLATFORMVER" ] && PLATFORMVER=android-15
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then
 	LOCAL_PATH=`realpath $LOCAL_PATH`
@@ -29,55 +28,85 @@ ARCH=armeabi-v7a
 
 
 CFLAGS="
--fexceptions
--frtti
+--target=armv7-none-linux-androideabi16
+--gcc-toolchain=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64
+--sysroot=$NDK/sysroot
+-isystem
+$NDK/sources/cxx-stl/llvm-libc++/include
+-isystem
+$NDK/sources/android/support/include
+-isystem
+$NDK/sources/cxx-stl/llvm-libc++abi/include
+-isystem
+$NDK/sysroot/usr/include/arm-linux-androideabi
+-g
+-DANDROID
 -ffunction-sections
 -funwind-tables
 -fstack-protector-strong
--Wno-invalid-command-line-argument
--Wno-unused-command-line-argument
 -no-canonical-prefixes
--I$NDK/sources/cxx-stl/llvm-libc++/include
--I$NDK/sources/cxx-stl/llvm-libc++abi/include
--I$NDK/sources/android/support/include
--DANDROID
--Wa,--noexecstack
--Wformat
--Werror=format-security
--DNDEBUG
--O2
--g
--gcc-toolchain
-$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64
--target
-armv7-none-linux-androideabi15
 -march=armv7-a
 -mfloat-abi=softfp
 -mfpu=vfpv3-d16
 -mthumb
--fpic
--fno-integrated-as
---sysroot $NDK/platforms/android-14/arch-arm
--isystem $NDK/sysroot/usr/include
--isystem $NDK/sysroot/usr/include/arm-linux-androideabi
--D__ANDROID_API__=15
+-Wa,--noexecstack
+-Wformat
+-Werror=format-security
+-Oz
+-DNDEBUG
+-fPIC
 $CFLAGS"
 
 CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
 
 LDFLAGS="
+--target=armv7-none-linux-androideabi16
+--gcc-toolchain=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64
+--sysroot=$NDK/sysroot
+-fPIC
+-isystem
+$NDK/sysroot/usr/include/arm-linux-androideabi
+-g
+-DANDROID
+-ffunction-sections
+-funwind-tables
+-fstack-protector-strong
+-no-canonical-prefixes
+-march=armv7-a
+-mfloat-abi=softfp
+-mfpu=vfpv3-d16
+-mthumb
+-Wa,--noexecstack
+-Wformat
+-Werror=format-security
+-Oz
+-DNDEBUG
+-Wl,--exclude-libs,libgcc.a
+-Wl,--exclude-libs,libatomic.a
+-nostdlib++
+--sysroot
+$NDK/platforms/android-16/arch-arm
+-Wl,--build-id
+-Wl,--warn-shared-textrel
+-Wl,--fatal-warnings
+-Wl,--fix-cortex-a8
+-Wl,--exclude-libs,libunwind.a
+-L$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a
+-Wl,--no-undefined
+-Wl,-z,noexecstack
+-Qunused-arguments
+-Wl,-z,relro
+-Wl,-z,now
 -shared
---sysroot $NDK/platforms/android-14/arch-arm
+-landroid
+-llog
+-latomic
+-lm
 $NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libc++_static.a
-$NDK/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/armeabi-v7a/libc++abi.a
-$NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/armeabi-v7a/libandroid_support.a
+$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libc++abi.a
+$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libandroid_support.a
 $NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libunwind.a
--latomic -Wl,--exclude-libs,libatomic.a
--gcc-toolchain
-$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64
--no-canonical-prefixes -target armv7-none-linux-androideabi14
--Wl,--fix-cortex-a8 -Wl,--exclude-libs,libunwind.a -Wl,--build-id -Wl,--no-undefined -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--warn-shared-textrel -Wl,--fatal-warnings
--lc -lm -lstdc++
+-ldl
 $LDFLAGS"
 
 LDFLAGS="`echo $LDFLAGS | tr '\n' ' '`"

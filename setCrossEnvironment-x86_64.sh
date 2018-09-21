@@ -18,7 +18,6 @@ fi
 #echo NDK $NDK
 GCCPREFIX=x86_64-linux-android
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
-[ -z "$PLATFORMVER" ] && PLATFORMVER=android-21
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then
 	LOCAL_PATH=`realpath $LOCAL_PATH`
@@ -29,48 +28,70 @@ ARCH=x86_64
 
 
 CFLAGS="
--fexceptions
--frtti
+--target=x86_64-none-linux-android21
+--gcc-toolchain=$NDK/toolchains/x86_64-4.9/prebuilt/linux-x86_64
+--sysroot=$NDK/sysroot
+-isystem
+$NDK/sources/cxx-stl/llvm-libc++/include
+-isystem
+$NDK/sources/cxx-stl/llvm-libc++abi/include
+-isystem
+$NDK/sysroot/usr/include/x86_64-linux-android
+-g
+-DANDROID
 -ffunction-sections
 -funwind-tables
 -fstack-protector-strong
--Wno-invalid-command-line-argument
--Wno-unused-command-line-argument
 -no-canonical-prefixes
--I$NDK/sources/cxx-stl/llvm-libc++/include
--I$NDK/sources/cxx-stl/llvm-libc++abi/include
--I$NDK/sources/android/support/include
--DANDROID
 -Wa,--noexecstack
 -Wformat
 -Werror=format-security
--DNDEBUG
 -O2
--g
--gcc-toolchain
-$NDK/toolchains/x86_64-4.9/prebuilt/linux-x86_64
--target
-x86_64-none-linux-android
+-DNDEBUG
 -fPIC
---sysroot $NDK/platforms/android-21/arch-x86_64
--isystem $NDK/sysroot/usr/include
--isystem $NDK/sysroot/usr/include/x86_64-linux-android
--D__ANDROID_API__=21
 $CFLAGS"
 
 CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
 
 LDFLAGS="
+--target=x86_64-none-linux-android21
+--gcc-toolchain=$NDK/toolchains/x86_64-4.9/prebuilt/linux-x86_64
+--sysroot=$NDK/sysroot
+-fPIC
+-isystem
+$NDK/sysroot/usr/include/x86_64-linux-android
+-g
+-DANDROID
+-ffunction-sections
+-funwind-tables
+-fstack-protector-strong
+-no-canonical-prefixes
+-Wa,--noexecstack
+-Wformat
+-Werror=format-security
+-O2
+-DNDEBUG
+-Wl,--exclude-libs,libgcc.a
+-Wl,--exclude-libs,libatomic.a
+-nostdlib++
+--sysroot
+$NDK/platforms/android-21/arch-x86_64
+-Wl,--build-id
+-Wl,--warn-shared-textrel
+-Wl,--fatal-warnings
+-L$NDK/sources/cxx-stl/llvm-libc++/libs/x86_64
+-Wl,--no-undefined
+-Wl,-z,noexecstack
+-Qunused-arguments
+-Wl,-z,relro
+-Wl,-z,now
 -shared
---sysroot $NDK/platforms/android-21/arch-x86_64
+-landroid
+-llog
+-latomic
+-lm
 $NDK/sources/cxx-stl/llvm-libc++/libs/x86_64/libc++_static.a
-$NDK/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/x86_64/libc++abi.a
--latomic -Wl,--exclude-libs,libatomic.a
--gcc-toolchain
-$NDK/toolchains/x86_64-4.9/prebuilt/linux-x86_64
--target x86_64-none-linux-android -no-canonical-prefixes
--Wl,--build-id -Wl,--no-undefined -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--warn-shared-textrel -Wl,--fatal-warnings
--lc -lm -lstdc++
+$NDK/sources/cxx-stl/llvm-libc++/libs/x86_64/libc++abi.a
 $LDFLAGS
 "
 
