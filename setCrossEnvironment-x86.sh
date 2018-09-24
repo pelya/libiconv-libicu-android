@@ -73,7 +73,6 @@ $NDK/sysroot/usr/include/i686-linux-android
 -Wa,--noexecstack
 -Wformat
 -Werror=format-security
--std=c++11
 -O2
 -DNDEBUG
 -Wl,--exclude-libs,libgcc.a
