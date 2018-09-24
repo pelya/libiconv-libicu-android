@@ -106,6 +106,9 @@ cd $BUILDDIR/$ARCH
 
 	cp -f lib/.libs/libiconv.so preload/preloadable_libiconv.so
 
+	echo 'all install:' > src/Makefile
+	echo '	touch $@' >> src/Makefile
+
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make V=1 || exit 1
@@ -200,6 +203,7 @@ cd $BUILDDIR/$ARCH
 
 	sed -i,tmp "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
 	sed -i,tmp "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
+	sed -i,tmp "s/#define U_OVERRIDE_CXX_ALLOCATION 1/#define U_OVERRIDE_CXX_ALLOCATION 0/g" common/unicode/uconfig.h
 
 	if [ $SHARED_ICU ]; then
 		libtype='--enable-shared --disable-static'
@@ -210,7 +214,7 @@ cd $BUILDDIR/$ARCH
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
 		LIBS="-L$BUILDDIR/$ARCH $ANDROID_SUPPORT `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
-		env ac_cv_func_strtod_l=no \
+		ac_cv_func_strtod_l=no \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
@@ -261,6 +265,12 @@ cd $BUILDDIR/$ARCH
 	cp -f $BUILDDIR/config.guess .
 
 	sed -i,tmp 's/ld_shlibs=no/ld_shlibs=yes/g' ./configure
+
+	touch dummy.c
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		sh -c '$CC $CFLAGS -c dummy.c -o src/crtbegin_so.o' || exit 1
+	cp -f src/crtbegin_so.o src/crtend_so.o
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		CXXFLAGS="-std=c++11" \
