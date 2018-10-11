@@ -190,9 +190,6 @@ cd $BUILDDIR/$ARCH
 
 	cd icu/source
 
-	cp -f $BUILDDIR/config.sub .
-	cp -f $BUILDDIR/config.guess .
-
 	[ -d cross ] || {
 		mkdir cross
 		cd cross
@@ -200,6 +197,9 @@ cd $BUILDDIR/$ARCH
 		make -j$NCPU VERBOSE=1 || exit 1
 		cd ..
 	} || exit 1
+
+	cp -f $BUILDDIR/config.sub .
+	cp -f $BUILDDIR/config.guess .
 
 	sed -i,tmp "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
 	sed -i,tmp "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
