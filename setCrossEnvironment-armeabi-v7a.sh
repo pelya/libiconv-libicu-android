@@ -16,7 +16,6 @@ elif uname -s | grep -i "windows" > /dev/null ; then
 fi
 
 #echo NDK $NDK
-GCCPREFIX=arm-linux-androideabi
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then
@@ -25,31 +24,19 @@ else
 	LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 fi
 ARCH=armeabi-v7a
+GCCPREFIX=armv7a-linux-androideabi
+BINUTILSPREFIX=arm-linux-androideabi
+APILEVEL=16
 
 
 CFLAGS="
---target=armv7-none-linux-androideabi16
---gcc-toolchain=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64
---sysroot=$NDK/sysroot
--isystem
-$NDK/sources/cxx-stl/llvm-libc++/include
--isystem
-$NDK/sources/android/support/include
--isystem
-$NDK/sources/cxx-stl/llvm-libc++abi/include
--isystem
-$NDK/sysroot/usr/include/arm-linux-androideabi
 -g
--DANDROID
 -ffunction-sections
+-fdata-sections
 -funwind-tables
 -fstack-protector-strong
 -no-canonical-prefixes
--march=armv7-a
--mfloat-abi=softfp
--mfpu=vfpv3-d16
 -mthumb
--Wa,--noexecstack
 -Wformat
 -Werror=format-security
 -Oz
@@ -60,38 +47,22 @@ $CFLAGS"
 CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
 
 LDFLAGS="
---target=armv7-none-linux-androideabi16
---gcc-toolchain=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64
---sysroot=$NDK/sysroot
 -fPIC
--isystem
-$NDK/sysroot/usr/include/arm-linux-androideabi
 -g
--DANDROID
 -ffunction-sections
+-fdata-sections
+-Wl,--gc-sections
 -funwind-tables
 -fstack-protector-strong
 -no-canonical-prefixes
--march=armv7-a
--mfloat-abi=softfp
--mfpu=vfpv3-d16
 -mthumb
--Wa,--noexecstack
 -Wformat
 -Werror=format-security
 -Oz
 -DNDEBUG
--Wl,--exclude-libs,libgcc.a
--Wl,--exclude-libs,libatomic.a
--nostdlib++
---sysroot
-$NDK/platforms/android-16/arch-arm
 -Wl,--build-id
 -Wl,--warn-shared-textrel
 -Wl,--fatal-warnings
--Wl,--fix-cortex-a8
--Wl,--exclude-libs,libunwind.a
--L$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a
 -Wl,--no-undefined
 -Wl,-z,noexecstack
 -Qunused-arguments
@@ -102,30 +73,26 @@ $NDK/platforms/android-16/arch-arm
 -llog
 -latomic
 -lm
-$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libc++_static.a
-$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libc++abi.a
-$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libandroid_support.a
-$NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libunwind.a
 -ldl
 $LDFLAGS"
 
 LDFLAGS="`echo $LDFLAGS | tr '\n' ' '`"
 
-CC="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/clang"
-CXX="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/clang++"
+CC="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$GCCPREFIX$APILEVEL-clang"
+CXX="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$GCCPREFIX$APILEVEL-clang++"
 CPP="$CC -E $CFLAGS"
 
-env PATH=$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
+env \
 CFLAGS="$CFLAGS" \
 CXXFLAGS="$CXXFLAGS $CFLAGS -frtti -fexceptions" \
 LDFLAGS="$LDFLAGS" \
 CC="$CC" \
 CXX="$CXX" \
-RANLIB="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-ranlib" \
-LD="$CC" \
-AR="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-ar" \
+RANLIB="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$BINUTILSPREFIX-ranlib" \
+LD="$CXX" \
+AR="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$BINUTILSPREFIX-ar" \
 CPP="$CPP" \
-NM="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-nm" \
-AS="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-as" \
-STRIP="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-strip" \
+NM="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$BINUTILSPREFIX-nm" \
+AS="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$BINUTILSPREFIX-as" \
+STRIP="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$BINUTILSPREFIX-strip" \
 "$@"
