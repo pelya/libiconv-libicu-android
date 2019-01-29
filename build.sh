@@ -98,6 +98,8 @@ cd $BUILDDIR/$ARCH
 	cd ..
 
 	for f in libiconv libcharset; do
+		cp -f lib64/$f.so ./ # libtool invents new dumb places to install libraries to
+		cp -f lib32/$f.so ./
 		cp -f lib/$f.so ./
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 			sh -c '$STRIP'" $f.so"
@@ -147,6 +149,8 @@ cd $BUILDDIR/$ARCH
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
+
+	mkdir -p ../lib
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
@@ -202,10 +206,6 @@ cd $BUILDDIR/$ARCH
 		--with-data-packaging=archive \
 		|| exit 1
 
-#		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include" \
-#		ICULEHB_LIBS="-licu-le-hb" \
-#		--enable-layoutex \
-
 	sed -i,tmp "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
@@ -220,12 +220,14 @@ cd $BUILDDIR/$ARCH
 
 	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc; do
 		if [ $SHARED_ICU ]; then
+			cp -f -H ../../lib64/$f.so ../../ # Maybe it's here, maybe not, who knows
+			cp -f -H ../../lib32/$f.so ../../
 			cp -f -H ../../lib/$f.so ../../
 		else
+			cp -f ../../lib64/$f.a ../../ # Different libtool versions do things differently
+			cp -f ../../lib32/$f.a ../../
 			cp -f ../../lib/$f.a ../../
 		fi
-		#$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-		#	sh -c '$STRIP'" ../../$f.so"
 	done
 
 } || exit 1
@@ -331,6 +333,8 @@ EOF
 		make V=1 install || exit 1
 
 	cd ..
+	cp -f lib64/libicu-le-hb.a ./ # Try every possibility
+	cp -f lib32/libicu-le-hb.a ./
 	cp -f lib/libicu-le-hb.a ./
 }
 
@@ -370,10 +374,7 @@ cd $BUILDDIR/$ARCH
 		make V=1 install || exit 1
 
 	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc libiculx; do
-		#cp -f -H ../../lib/$f.so ../../
-		cp -f ../../lib/$f.a ../../ || exit 1
-		#$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-		#	sh -c '$STRIP'" ../../$f.so"
+		cp -f ../../lib/$f.a ../../ || cp -f ../../lib64/$f.a ../../ || cp -f ../../lib32/$f.a ../../ || exit 1
 	done
 
 } || exit 1
