@@ -223,13 +223,13 @@ cd $BUILDDIR/$ARCH
 			
 	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc; do
 		if [ $SHARED_ICU ]; then
-			[[ -f ../../lib64/$f.so ]] && cp -f -H ../../lib64/$f.so ../../   # Maybe it's here, maybe not, who knows
-			[[ -f ../../lib32/$f.so ]] && cp -f -H ../../lib32/$f.so ../../   
-			[[ -f ../../lib/$f.so   ]] && cp -f -H ../../lib/$f.so ../../   
+			[ -f ../../lib64/$f.so ] && cp -f -H ../../lib64/$f.so ../../   # Maybe it's here, maybe not, who knows
+			[ -f ../../lib32/$f.so ] && cp -f -H ../../lib32/$f.so ../../   
+			[ -f ../../lib/$f.so   ] && cp -f -H ../../lib/$f.so ../../   
 		else
-			[[ -f ../../lib64/$f.a ]] && cp -f ../../lib64/$f.a ../../      # Different libtool versions do things differently
-			[[ -f ../../lib32/$f.a ]] && cp -f ../../lib32/$f.a ../../     
-			[[ -f ../../lib/$f.a   ]] && cp -f ../../lib/$f.a ../../       
+			[ -f ../../lib64/$f.a ] && cp -f ../../lib64/$f.a ../../      # Different libtool versions do things differently
+			[ -f ../../lib32/$f.a ] && cp -f ../../lib32/$f.a ../../     
+			[ -f ../../lib/$f.a   ] && cp -f ../../lib/$f.a ../../       
 		fi
 	done
 
@@ -377,9 +377,9 @@ cd $BUILDDIR/$ARCH
 		make V=1 install || exit 1
 
 	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc libiculx; do
-		[[ -f ../../lib/$f.a   ]] && cp -f ../../lib/$f.a ../../
-		[[ -d ../../lib64/$f.a ]] && cp -f ../../lib64/$f.a ../../
-		[[ -d ../../lib32/$f.a ]] && cp -f ../../lib32/$f.a ../../
+		[ -f ../../lib/$f.a   ] && cp -f ../../lib/$f.a ../../
+		[ -f ../../lib64/$f.a ] && cp -f ../../lib64/$f.a ../../
+		[ -f ../../lib32/$f.a ] && cp -f ../../lib32/$f.a ../../
 	 done
 
 } || exit 1
