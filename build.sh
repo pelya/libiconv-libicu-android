@@ -30,7 +30,7 @@ for ARCH in $ARCHS; do
 
 cd $BUILDDIR
 
-GCCPREFIX="`./setCrossEnvironment-$ARCH.sh sh -c 'basename $STRIP | sed s/-strip//'`"
+GCCPREFIX="`./setEnvironment-$ARCH.sh sh -c 'basename $CC | sed s/-clang//'`"
 echo "ARCH $ARCH GCCPREFIX $GCCPREFIX"
 
 mkdir -p $ARCH
@@ -55,7 +55,7 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-D_IO_getc=getc" \
 		LDFLAGS="-L$BUILDDIR/$ARCH" \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
 		--prefix=`pwd`/.. \
@@ -63,23 +63,23 @@ cd $BUILDDIR/$ARCH
 		|| exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 || echo "Libtool is a miserable pile of shit, linking libcharset.so manually"
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		sh -c '$LD $CFLAGS $LDFLAGS -shared -Wl,-soname=libcharset.so libcharset/lib/.libs/*.o -o libcharset/lib/.libs/libcharset.so' || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 || echo "Libtool works worse than cat /dev/urandom | head 10000 > library.so, because this will at least generate a target file, linking libiconv.so manually"
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		sh -c '$LD $CFLAGS $LDFLAGS -shared -Wl,-soname=libiconv.so lib/.libs/*.o -o lib/.libs/libiconv.so' || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 || echo "Did you know that libtool contributes to global warming by overheating your CPU?"
 
 	cp -f lib/.libs/libiconv.so preload/preloadable_libiconv.so
@@ -88,11 +88,11 @@ cd $BUILDDIR/$ARCH
 	echo '	touch $@' >> src/Makefile
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
 
 	cd ..
@@ -101,7 +101,7 @@ cd $BUILDDIR/$ARCH
 		cp -f lib64/$f.so ./ # libtool invents new dumb places to install libraries to
 		cp -f lib32/$f.so ./
 		cp -f lib/$f.so ./
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 			sh -c '$STRIP'" $f.so"
 	done
 
@@ -124,7 +124,7 @@ cd $BUILDDIR/$ARCH
 	env CFLAGS="-frtti -fexceptions -I$BUILDDIR/$ARCH/include" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
 		LIBS="-L$BUILDDIR/$ARCH" \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
 		--prefix=`pwd`/../ \
@@ -135,25 +135,25 @@ cd $BUILDDIR/$ARCH
 		|| exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make -j$NCPU V=1 || echo "Crappy libtool cannot link anything"
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-		sh -c '$LD $CFLAGS $LDFLAGS -shared src/.libs/*.o src/hb-ucdn/.libs/*.o -o src/.libs/libharfbuzz.so' || exit 1
+		$BUILDDIR/setEnvironment-$ARCH.sh \
+		sh -c '$LD $CFLAGS $LDFLAGS -shared src/.libs/*.o src/hb-ucdn/.libs/*.o -o src/.libs/libharfbuzz.so.0.10400.6' || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make -j$NCPU V=1 || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
 
 	mkdir -p ../lib
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		sh -c '$AR rcs ../lib/libharfbuzz.a src/.libs/*.o src/hb-ucdn/.libs/*.o' || exit 1
 
 	cd ..
@@ -195,9 +195,9 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
+		LIBS="-L$BUILDDIR/$ARCH `$BUILDDIR/setEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
 		ac_cv_func_strtod_l=no \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
 		--prefix=`pwd`/../../ \
@@ -209,13 +209,13 @@ cd $BUILDDIR/$ARCH
 	sed -i,tmp "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make -j$NCPU VERBOSE=1 || exit 1
 
 	sed -i,tmp "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
 
 			
@@ -223,13 +223,17 @@ cd $BUILDDIR/$ARCH
 			
 	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc; do
 		if [ $SHARED_ICU ]; then
-			[ -f ../../lib64/$f.so ] && cp -f -H ../../lib64/$f.so ../../   # Maybe it's here, maybe not, who knows
-			[ -f ../../lib32/$f.so ] && cp -f -H ../../lib32/$f.so ../../
-			[ -f ../../lib/$f.so   ] && cp -f -H ../../lib/$f.so ../../
+			# Maybe it's here, maybe not, who knows
+			cp -f -H ../../lib64/$f.so ../../ || \
+			cp -f -H ../../lib32/$f.so ../../ || \
+			cp -f -H ../../lib/$f.so ../../   || \
+				exit 1
 		else
-			[ -f ../../lib64/$f.a ] && cp -f ../../lib64/$f.a ../../      # Different libtool versions do things differently
-			[ -f ../../lib32/$f.a ] && cp -f ../../lib32/$f.a ../../
-			[ -f ../../lib/$f.a   ] && cp -f ../../lib/$f.a ../../
+			# Different libtool versions do things differently
+			cp -f ../../lib64/$f.a ../../ || \
+			cp -f ../../lib32/$f.a ../../ || \
+			cp -f ../../lib/$f.a ../../   || \
+				exit 1
 		fi
 	done
 
@@ -251,7 +255,7 @@ cd $BUILDDIR/$ARCH
 
 	touch dummy.c
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		sh -c '$CC $CFLAGS -c dummy.c -o src/crtbegin_so.o' || exit 1
 	cp -f src/crtbegin_so.o src/crtend_so.o
 
@@ -263,7 +267,7 @@ cd $BUILDDIR/$ARCH
 		HARFBUZZ_LIBS="-L$BUILDDIR/$ARCH/lib -lharfbuzz" \
 		ICU_CFLAGS="-I$BUILDDIR/$ARCH/include" \
 		ICU_LIBS="-L$BUILDDIR/$ARCH/lib" \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
 		--prefix=`pwd`/../ \
@@ -271,14 +275,14 @@ cd $BUILDDIR/$ARCH
 		|| exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 || \
 		env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		sh -c '$LD $CFLAGS -shared src/.libs/*.o -o src/.libs/libicu-le-hb.so.0.0.0 -L../lib -lharfbuzz -licuuc $LDFLAGS' || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		sh -c '$AR rcs ../lib/libicu-le-hb.a src/.libs/*.o' || exit 1
 
 	cat > src/libicu-le-hb.la <<EOF
@@ -328,11 +332,11 @@ EOF
 	cp -f src/libicu-le-hb.la src/.libs/libicu-le-hb.lai
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
 
 	cd ..
@@ -351,10 +355,10 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
+		LIBS="-L$BUILDDIR/$ARCH `$BUILDDIR/setEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
 		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include/icu-le-hb" \
 		ICULEHB_LIBS="-licu-le-hb" \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
 		--prefix=`pwd`/../../ \
@@ -367,20 +371,21 @@ cd $BUILDDIR/$ARCH
 	sed -i,tmp "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make -j$NCPU VERBOSE=1 || exit 1
 
 	sed -i,tmp "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
 
 	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc libiculx; do
-		[ -f ../../lib/$f.a   ] && cp -f ../../lib/$f.a ../../
-		[ -f ../../lib64/$f.a ] && cp -f ../../lib64/$f.a ../../
-		[ -f ../../lib32/$f.a ] && cp -f ../../lib32/$f.a ../../
-	 done
+		cp -f ../../lib/$f.a ../../   || \
+		cp -f ../../lib64/$f.a ../../ || \
+		cp -f ../../lib32/$f.a ../../ || \
+			exit 1
+	done
 
 } || exit 1
 
