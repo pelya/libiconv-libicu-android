@@ -112,9 +112,9 @@ cd $BUILDDIR/$ARCH
 cd $BUILDDIR/$ARCH
 
 [ -e libharfbuzz.a ] || [ $SKIP_HARFBUZZ ] || {
-	rm -rf harfbuzz-1.4.6
-	tar xvf ../harfbuzz-1.4.6.tar.bz2
-	cd harfbuzz-1.4.6
+	rm -rf harfbuzz-2.8.0
+	tar xvf ../harfbuzz-2.8.0.tar.xz
+	cd harfbuzz-2.8.0
 
 	cp -f $BUILDDIR/config.sub .
 	cp -f $BUILDDIR/config.guess .
@@ -140,7 +140,24 @@ cd $BUILDDIR/$ARCH
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setEnvironment-$ARCH.sh \
-		sh -c '$LD $CFLAGS $LDFLAGS -shared src/.libs/*.o src/hb-ucdn/.libs/*.o -o src/.libs/libharfbuzz.so.0.10400.6' || exit 1
+		sh -c '$LD $CFLAGS $LDFLAGS -shared src/.libs/libharfbuzz_la*.o -o src/.libs/libharfbuzz.so.0.20800.0' || exit 1
+
+	ln -s -f libharfbuzz.so.0.20800.0 src/.libs/libharfbuzz.so.0
+	ln -s -f libharfbuzz.so.0.20800.0 src/.libs/libharfbuzz.so
+	ln -s -f libharfbuzz.so.0.20800.0 src/libharfbuzz.so
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
+		make -j$NCPU V=1 || echo "Poop libtool runs some piss relink command when no one asks"
+
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setEnvironment-$ARCH.sh \
+		sh -c '$LD $CFLAGS $LDFLAGS -L src/.libs -l harfbuzz -shared src/.libs/libharfbuzz_subset_la*.o -o src/.libs/libharfbuzz-subset.so.0.20800.0' || exit 1
+
+	ln -s -f libharfbuzz-subset.so.0.20800.0 src/.libs/libharfbuzz-subset.so.0
+	ln -s -f libharfbuzz-subset.so.0.20800.0 src/.libs/libharfbuzz-subset.so
+	ln -s -f libharfbuzz-subset.so.0.20800.0 src/libharfbuzz-subset.so
+	sed -i.tmp 's/relink_command=.*//' src/libharfbuzz-subset.la
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setEnvironment-$ARCH.sh \
@@ -149,12 +166,6 @@ cd $BUILDDIR/$ARCH
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
-
-	mkdir -p ../lib
-
-	env PATH=`pwd`:$PATH \
-		$BUILDDIR/setEnvironment-$ARCH.sh \
-		sh -c '$AR rcs ../lib/libharfbuzz.a src/.libs/*.o src/hb-ucdn/.libs/*.o' || exit 1
 
 	cd ..
 	cp -f lib/libharfbuzz.a ./
