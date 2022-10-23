@@ -112,9 +112,9 @@ cd $BUILDDIR/$ARCH
 cd $BUILDDIR/$ARCH
 
 [ -e libharfbuzz.a ] || [ $SKIP_HARFBUZZ ] || {
-	rm -rf harfbuzz-2.8.0
-	tar xvf ../harfbuzz-2.8.0.tar.xz
-	cd harfbuzz-2.8.0
+	rm -rf harfbuzz-2.8.2
+	tar xvf ../harfbuzz-2.8.2.tar.xz
+	cd harfbuzz-2.8.2
 
 	cp -f $BUILDDIR/config.sub .
 	cp -f $BUILDDIR/config.guess .
