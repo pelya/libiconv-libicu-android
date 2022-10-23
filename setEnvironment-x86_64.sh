@@ -7,7 +7,7 @@ NDK=`which ndk-build`
 NDK=`dirname $NDK`
 
 if uname -s | grep -i "linux" > /dev/null ; then
-	MYARCH=linux-$(arch)
+	MYARCH=linux-$(uname -m)
 	NDK=`readlink -f $NDK`
 elif uname -s | grep -i "darwin" > /dev/null ; then
 	MYARCH=darwin-x86_64
