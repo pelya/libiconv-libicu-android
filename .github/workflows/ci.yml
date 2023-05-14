@@ -12,13 +12,11 @@ jobs:
         abi: [armeabi-v7a,arm64-v8a,x86,x86_64]
         #os: [ubuntu-latest,macos-latest]
         os: [ubuntu-latest]
+        ndk_version: [25.2.9519653]
         include:
           # includes a new variable of 'variation' for each host os
           - os: ubuntu-latest
             variation: linux
-          - os: macos-latest
-            variation: mac
-            ndk_version: 25.2.9519653
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
