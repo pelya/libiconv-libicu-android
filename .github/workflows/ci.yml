@@ -44,7 +44,7 @@ jobs:
       run: |
         export PATH=$NDK_ROOT:$PATH
         export ARCHS="${{ matrix.abi }}"
-        ./build.sh 2>&1 | tee "${{ matrix.abi }}/build.log"
+        ./build.sh
     - name: Prepare Binaries
       run: |
         set -x
