@@ -121,7 +121,7 @@ cd $BUILDDIR/$ARCH
 
 	sed -i,tmp 's/ld_shlibs=no/ld_shlibs=yes/g' ./configure
 
-	env CFLAGS="-frtti -fexceptions -I$BUILDDIR/$ARCH/include" \
+	env CFLAGS="-frtti -fexceptions -I$BUILDDIR/$ARCH/include -Wno-unused-but-set-variable" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
 		LIBS="-L$BUILDDIR/$ARCH" \
 		$BUILDDIR/setEnvironment-$ARCH.sh \
