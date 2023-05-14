@@ -35,12 +35,15 @@ jobs:
         set -x
         export NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/${{ matrix.ndk_version }}
         echo "::set-env name=NDK_ROOT::$NDK_ROOT"
-        export NUM_CPU=`python -c 'import multiprocessing as mp; print(mp.cpu_count())'`
-        echo "::set-env name=NUM_CPU::$NUM_CPU"
+        export NCPU=`python -c 'import multiprocessing as mp; print(mp.cpu_count())'`
+        echo "::set-env name=NCPU::$NCPU"
         set
         mkdir -p archive
     - name: Build libraries for Android on ${{ matrix.variation }}
-      run: env ARCHS="${{ matrix.abi }}" ./build.sh
+      run: |
+        export PATH=$NDK_ROOT:$PATH
+        export ARCHS="${{ matrix.abi }}"
+        ./build.sh
     - name: Prepare Binaries
       run: |
         set -x
