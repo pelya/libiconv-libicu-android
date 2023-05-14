@@ -1,0 +1,59 @@
+name: CI
+
+on: [pull_request]
+
+env:
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        abi: [armeabi-v7a,arm64-v8a,x86,x86_64]
+        #os: [ubuntu-latest,macos-latest]
+        os: [ubuntu-latest]
+        include:
+          # includes a new variable of 'variation' for each host os
+          - os: ubuntu-latest
+            variation: linux
+          - os: macos-latest
+            variation: mac
+            ndk_version: 25.2.9519653
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout Sources
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Setup Android Environment
+      uses: android-actions/setup-android@v2
+    - name: Install Android NDK
+      run: sdkmanager --install "ndk;${{ matrix.ndk_version }}"
+    - name: Setup Environment Variables
+      run: |
+        set -x
+        export NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/${{ matrix.ndk_version }}
+        echo "::set-env name=NDK_ROOT::$NDK_ROOT"
+        export NUM_CPU=`python -c 'import multiprocessing as mp; print(mp.cpu_count())'`
+        echo "::set-env name=NUM_CPU::$NUM_CPU"
+        set
+        mkdir -p archive
+    - name: Build libraries for Android on ${{ matrix.variation }}
+      run: env ARCHS="${{ matrix.abi }}" ./build.sh
+    - name: Prepare Binaries
+      run: |
+        set -x
+        mv ${{ matrix.abi }}/include ${GITHUB_WORKSPACE}/archive/ || true
+        mv ${{ matrix.abi }}/lib ${GITHUB_WORKSPACE}/archive/ || true
+        mv ${{ matrix.abi }}/share ${GITHUB_WORKSPACE}/archive/ || true
+        ls -alFR ${GITHUB_WORKSPACE}/archive
+      if: always()
+    - name: Upload Binaries
+      uses: actions/upload-artifact@v1
+      with:
+        name: libraries_${{ matrix.abi }}
+        path: ./archive
+      if: always()
