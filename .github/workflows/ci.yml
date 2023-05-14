@@ -39,11 +39,12 @@ jobs:
         echo "::set-env name=NCPU::$NCPU"
         set
         mkdir -p archive
+        mkdir -p logs
     - name: Build libraries for Android on ${{ matrix.variation }}
       run: |
         export PATH=$NDK_ROOT:$PATH
         export ARCHS="${{ matrix.abi }}"
-        ./build.sh
+        ./build.sh 2>&1 | tee "${{ matrix.abi }}/build.log"
     - name: Prepare Binaries
       run: |
         set -x
@@ -57,4 +58,16 @@ jobs:
       with:
         name: libraries_${{ matrix.abi }}
         path: ./archive
+      if: always()
+    - name: Prepare Logs
+      run: |
+        set -x
+        find ${{ matrix.abi }} -name "*.log" | xargs cp --parents -t ${GITHUB_WORKSPACE}/logs/ || true
+        ls -alFR ${GITHUB_WORKSPACE}/logs
+      if: always()
+    - name: Upload Logs
+      uses: actions/upload-artifact@v1
+      with:
+        name: logs_${{ matrix.abi }}
+        path: ./logs
       if: always()
