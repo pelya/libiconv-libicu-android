@@ -12,7 +12,7 @@ jobs:
         abi: [armeabi-v7a,arm64-v8a,x86,x86_64]
         #os: [ubuntu-latest,macos-latest]
         os: [ubuntu-latest]
-        ndk_version: [25.2.9519653]
+        ndk_version: [28.1.13356709]
         include:
           # includes a new variable of 'variation' for each host os
           - os: ubuntu-latest
@@ -54,7 +54,7 @@ jobs:
         ls -alFR ${GITHUB_WORKSPACE}/archive
       if: always()
     - name: Upload Binaries
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: libraries_${{ matrix.abi }}
         path: ./archive
@@ -66,7 +66,7 @@ jobs:
         ls -alFR ${GITHUB_WORKSPACE}/logs
       if: always()
     - name: Upload Logs
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: logs_${{ matrix.abi }}
         path: ./logs
